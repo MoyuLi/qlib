@@ -1,0 +1,44 @@
+qlib_init:
+  provider_uri: "~/.qlib/qlib_data/us_live"
+  region: us
+
+market: &market sp500
+
+task:
+  model:
+    class: LGBModel
+    module_path: qlib.contrib.model.gbdt
+    kwargs:
+      loss: mse
+      learning_rate: 0.05
+      num_leaves: 63
+  dataset:
+    class: DatasetH
+    module_path: qlib.data.dataset
+    kwargs:
+      handler:
+        class: Alpha158
+        module_path: qlib.contrib.data.handler
+        kwargs:
+          start_time: 2016-01-01
+          end_time: 2025-12-31
+          instruments: *market
+      segments:
+        train: [2016-01-01, 2022-12-31]
+        valid: [2023-01-01, 2023-12-31]
+        test:  [2024-01-01, 2025-12-31]
+
+port_analysis_config:
+  strategy:
+    class: TopkDropoutStrategy
+    module_path: qlib.contrib.strategy
+    kwargs:
+      topk: 20
+      n_drop: 3
+  backtest:
+    account: 20000
+    benchmark: SPY
+    exchange_kwargs:
+      open_cost: 0.0005
+      close_cost: 0.0005
+      min_cost: 1
