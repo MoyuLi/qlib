@@ -1,0 +1,7 @@
+# One symbol per line. Start with a small, liquid basket.
+AAPL
+MSFT
+GOOGL
+AMZN
+SPY
+QQQ
