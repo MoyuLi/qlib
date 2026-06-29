@@ -29,9 +29,36 @@ log = logging.getLogger("run_live")
 
 
 def get_last_prices(broker: AlpacaBroker, symbols) -> dict:
-    """Placeholder: fetch last trade price per symbol. Wire to Alpaca market
-    data (or the same source used for training) before going live."""
-    raise NotImplementedError("Wire get_last_prices to a real market-data source")
+    """Fetch last trade price per symbol from Alpaca market data.
+
+    Uses the same Alpaca account credentials. Symbols that have no quote
+    (delisted, non-US, bad ticker) are simply omitted; target_to_orders
+    skips any symbol without a price, so this fails safe.
+    """
+    symbols = [s for s in {str(s).upper() for s in symbols} if s]
+    if not symbols:
+        return {}
+
+    from alpaca.data.historical import StockHistoricalDataClient
+    from alpaca.data.requests import StockLatestTradeRequest
+
+    data = StockHistoricalDataClient(
+        os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"]
+    )
+    prices: dict = {}
+    # batch to keep request URLs sane
+    for i in range(0, len(symbols), 100):
+        chunk = symbols[i : i + 100]
+        try:
+            trades = data.get_stock_latest_trade(
+                StockLatestTradeRequest(symbol_or_symbols=chunk)
+            )
+            for sym, trade in trades.items():
+                if trade and trade.price:
+                    prices[sym] = float(trade.price)
+        except Exception as e:  # one bad chunk shouldn't sink the run
+            log.warning("price fetch failed for chunk %s..: %s", chunk[:3], e)
+    return prices
 
 
 def alert(message: str):
@@ -64,7 +91,11 @@ def main():
     scores = pd.read_parquet(SCORES_PATH)["score"]
 
     # 3. compute target weights -> delta orders
-    cfg = TargetWeightConfig(equity=state.equity)
+    # Size against a deployable sleeve (Phase E: "fund a few hundred dollars"),
+    # not the whole paper account. Risk math below still uses true equity.
+    deploy_capital = float(os.environ.get("TRADING_CAPITAL", state.equity))
+    cfg = TargetWeightConfig(equity=deploy_capital)
+    log.info("Sizing target weights against deploy_capital=%.2f (equity=%.2f)", deploy_capital, state.equity)
     target_weights = scores_to_target_weights(scores, cfg)
     last_prices = get_last_prices(broker, set(target_weights) | set(state.positions))
     orders = target_weights_to_orders(target_weights, state.positions, last_prices, cfg)

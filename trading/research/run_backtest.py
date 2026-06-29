@@ -9,7 +9,6 @@ import qlib
 import yaml
 from qlib.utils import init_instance_by_config
 from qlib.workflow import R
-from qlib.contrib.report import analysis_position
 from qlib.workflow.record_temp import SignalRecord, PortAnaRecord, SigAnaRecord
 
 
