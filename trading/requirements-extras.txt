@@ -1,0 +1,25 @@
+# Optional dependencies for the comprehensive trading workflow.
+#
+# Everything in trading/ runs without these — each integration imports its
+# library lazily and degrades gracefully (empty data / lexicon fallback) when
+# the lib or API key is missing. Install only the legs you actually use.
+
+# --- Market Data layer ---
+yfinance                 # free daily OHLCV, news, option chains
+finnhub-python           # company news (needs FINNHUB_API_KEY)
+requests                 # SEC EDGAR filings (set SEC_USER_AGENT)
+fredapi                  # macro series (needs FRED_API_KEY)
+pandas-datareader        # keyless FRED fallback
+
+# --- AI layer ---
+transformers             # FinBERT / FinGPT sentiment
+torch                    # backend for transformers
+anthropic                # LLM event extraction (needs ANTHROPIC_API_KEY)
+openai                   # alt LLM event extraction (needs OPENAI_API_KEY)
+
+# --- Strategy layer (optional RL leg) ---
+finrl                    # reinforcement-learning portfolio agent
+stable-baselines3        # RL algorithms backend
+
+# --- Execution (already used by the live bridge) ---
+alpaca-py                # paper/live brokerage
