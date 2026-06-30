@@ -47,6 +47,7 @@ DEFAULT_WEIGHTS = {
     "momentum": 0.3,
     "reversal": 0.1,
     "low_vol": 0.1,
+    "options": 0.2,
 }
 
 
@@ -97,6 +98,20 @@ def main(config_path: str):
             log.info("Factor legs computed over %d price rows", len(prices))
     except Exception as e:
         log.warning("Factor legs skipped: %s", e)
+
+    # --- Options positioning leg (contrarian put/call) -----------------------
+    try:
+        from trading.data.sources.options import get_option_features
+
+        opt = get_option_features(universe, max_expiries=1)
+        if not opt.empty:
+            # elevated put/call open-interest = bearish positioning -> negate
+            pc = opt.set_index("symbol")["put_call_oi_ratio"].dropna()
+            if not pc.empty:
+                signals["options"] = (-pc).rename("options")
+                log.info("Options leg: %d symbols", len(pc))
+    except Exception as e:
+        log.warning("Options leg skipped: %s", e)
 
     # --- Blend ---------------------------------------------------------------
     weights = {k: w for k, w in DEFAULT_WEIGHTS.items() if k in signals}

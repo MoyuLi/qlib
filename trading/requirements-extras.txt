@@ -1,25 +1,30 @@
 # Optional dependencies for the comprehensive trading workflow.
 #
 # Everything in trading/ runs without these — each integration imports its
-# library lazily and degrades gracefully (empty data / lexicon fallback) when
-# the lib or API key is missing. Install only the legs you actually use.
+# library lazily and degrades gracefully (empty data / VADER fallback / rules
+# fallback) when the lib or API key is missing. Install only the legs you use.
 
 # --- Market Data layer ---
-yfinance                 # free daily OHLCV, news, option chains
+yfinance                 # daily OHLCV, news, option chains (keyless)
 finnhub-python           # company news (needs FINNHUB_API_KEY)
 requests                 # SEC EDGAR filings (set SEC_USER_AGENT)
 fredapi                  # macro series (needs FRED_API_KEY)
 pandas-datareader        # keyless FRED fallback
 
 # --- AI layer ---
-transformers             # FinBERT / FinGPT sentiment
-torch                    # backend for transformers
-anthropic                # LLM event extraction (needs ANTHROPIC_API_KEY)
-openai                   # alt LLM event extraction (needs OPENAI_API_KEY)
+vaderSentiment           # lexicon+rules sentiment (light path, no torch)
+transformers             # FinBERT / FinGPT sentiment (primary; heavy)
+torch                    # backend for transformers (heavy ~250MB)
+openai                   # LLM event extraction (needs funded OPENAI_API_KEY)
+anthropic                # alt LLM event extraction (needs ANTHROPIC_API_KEY)
 
-# --- Strategy layer (optional RL leg) ---
-finrl                    # reinforcement-learning portfolio agent
+# --- Strategy layer ---
+ta                       # technical-indicator factors (numpy 2 compatible)
+finrl                    # optional RL portfolio agent
 stable-baselines3        # RL algorithms backend
 
 # --- Execution (already used by the live bridge) ---
 alpaca-py                # paper/live brokerage
+
+# NOTE: classic `pandas-ta` is NOT used — it imports the removed `numpy.NaN`
+# and breaks on numpy>=2.0. We use `ta` (Bukosabino) instead.

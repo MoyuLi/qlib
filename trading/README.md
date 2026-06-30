@@ -31,15 +31,17 @@ Normalized adapters; all price backends emit the same long OHLCV frame (see
 | `macro.py` | FRED (rates, curve, credit, USD, VIX) | `FRED_API_KEY` (pdr fallback) |
 
 ### AI Layer — `trading/ai/`
-- `sentiment.py` — `SentimentScorer` (FinBERT / FinGPT via transformers, with a
-  dependency-free lexicon fallback) → polarity in [-1, 1].
-- `events.py` — `EventExtractor` (Claude / GPT) → structured `ExtractedEvent`s
-  (type, polarity, confidence), with a keyword-rules fallback.
+- `sentiment.py` — `SentimentScorer`: FinBERT / FinGPT via transformers
+  (primary), **VADER** (`vaderSentiment`) as the no-torch fallback → polarity
+  in [-1, 1]. No hand-maintained word lists.
+- `events.py` — `EventExtractor` (`auto`: Claude if `ANTHROPIC_API_KEY`, else
+  GPT if `OPENAI_API_KEY`, else keyword rules) → structured `ExtractedEvent`s.
 - `signals.py` — collapse per-article scores into a per-symbol cross-section
   with **recency decay** and **confidence weighting**.
 
 ### Strategy Layer — `trading/strategy/`
-- `factors.py` — momentum (12-1), short reversal, low-vol.
+- `factors.py` — momentum (ROC), reversal (RSI), low-vol (Bollinger width),
+  computed with the `ta` library (not hand-rolled).
 - `ml_models.py` — wrap a trained qlib model's latest cross-section as a signal.
 - `combine.py` — z-score + winsorize + weighted blend → one ranked score.
 - `rules.py` — hard overlays: block/allow lists, liquidity floor, halts,

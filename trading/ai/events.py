@@ -53,7 +53,15 @@ _RULES = {
 
 
 class EventExtractor:
-    def __init__(self, backend: str = "anthropic", model: Optional[str] = None):
+    def __init__(self, backend: str = "auto", model: Optional[str] = None):
+        # "auto": use whichever LLM key is present (Anthropic preferred), else rules.
+        if backend == "auto":
+            if os.environ.get("ANTHROPIC_API_KEY"):
+                backend = "anthropic"
+            elif os.environ.get("OPENAI_API_KEY"):
+                backend = "openai"
+            else:
+                backend = "rules"
         self.backend = backend
         self.model = model
         self._client = None
@@ -132,10 +140,10 @@ class EventExtractor:
             if any(kw in low for kw in kws):
                 event_type = etype
                 break
-        # crude polarity off the sentiment lexicon
+        # polarity from VADER (no LLM, no torch)
         from trading.ai.sentiment import SentimentScorer
 
-        polarity = SentimentScorer._score_lexicon(low)
+        polarity = SentimentScorer(backend="vader").score([text])[0]
         return {
             "event_type": event_type,
             "polarity": polarity,
