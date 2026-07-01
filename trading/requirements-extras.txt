@@ -13,7 +13,7 @@ pandas-datareader        # keyless FRED fallback
 
 # --- AI layer ---
 vaderSentiment           # lexicon+rules sentiment (light path, no torch)
-transformers             # FinBERT / FinGPT sentiment (primary; heavy)
+transformers             # FinBERT sentiment (primary; heavy)
 torch                    # backend for transformers (heavy ~250MB)
 openai                   # LLM event extraction (needs funded OPENAI_API_KEY)
 anthropic                # alt LLM event extraction (needs ANTHROPIC_API_KEY)

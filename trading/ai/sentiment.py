@@ -4,10 +4,13 @@ A ``SentimentScorer`` maps a list of strings -> list of polarity scores in
 [-1, 1] (bearish→bullish). Backends, selected by ``backend=``:
 
 * ``finbert`` — ProsusAI/finbert via 🤗 transformers (recommended; needs torch).
-* ``fingpt``  — FinGPT sentiment LoRA; same transformers pipeline contract.
 * ``vader``   — NLTK VADER (``vaderSentiment`` package): a lexicon+rules model
   that natively handles negation, intensifiers and punctuation. Pure-Python,
   no torch — the automatic fallback when transformers isn't available.
+
+(A generative FinGPT LoRA backend was intentionally left out: it needs a gated
+13B base model + ``peft`` + a GPU, which is impractical here and gives no gain
+over FinBERT for short-headline sentiment.)
 
 No sentiment lexicon is hand-maintained here; the light path defers entirely to
 VADER. The model is loaded lazily on first ``score()`` and cached.
@@ -31,7 +34,7 @@ class SentimentScorer:
         texts = [t or "" for t in texts]
         if not texts:
             return []
-        if self.backend in ("finbert", "fingpt"):
+        if self.backend == "finbert":
             scores = self._score_transformers(texts)
             if scores is not None:
                 return scores
@@ -87,6 +90,5 @@ class SentimentScorer:
 def _default_model(backend: str) -> str:
     return {
         "finbert": "ProsusAI/finbert",
-        "fingpt": "FinGPT/fingpt-sentiment_llama2-13b_lora",
         "vader": "vader",
     }.get(backend, "ProsusAI/finbert")

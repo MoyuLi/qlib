@@ -31,9 +31,9 @@ Normalized adapters; all price backends emit the same long OHLCV frame (see
 | `macro.py` | FRED (rates, curve, credit, USD, VIX) | `FRED_API_KEY` (pdr fallback) |
 
 ### AI Layer — `trading/ai/`
-- `sentiment.py` — `SentimentScorer`: FinBERT / FinGPT via transformers
-  (primary), **VADER** (`vaderSentiment`) as the no-torch fallback → polarity
-  in [-1, 1]. No hand-maintained word lists.
+- `sentiment.py` — `SentimentScorer`: FinBERT via transformers (primary),
+  **VADER** (`vaderSentiment`) as the no-torch fallback → polarity in [-1, 1].
+  No hand-maintained word lists.
 - `events.py` — `EventExtractor` (`auto`: Claude if `ANTHROPIC_API_KEY`, else
   GPT if `OPENAI_API_KEY`, else keyword rules) → structured `ExtractedEvent`s.
 - `signals.py` — collapse per-article scores into a per-symbol cross-section
